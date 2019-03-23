@@ -1,0 +1,10 @@
+.idea/*
+.idea/
+*.log
+*/__pychache__/
+*.so
+# environmental tensors saved as numpy format
+*.npy
+*.pyc
+# notebooks checkpoints
+*.ipynb_checkpoints
