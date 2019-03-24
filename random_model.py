@@ -20,10 +20,9 @@ class RandomModel(Classifier):
     def predict(self, dataset, ranking_size=30):
 
         predictions = []
-
         for j in range(len(dataset)):
-            y_predicted = np.random.choice(self.all_labels.values, size=ranking_size)
-            predictions.append(list(y_predicted))
+            y_predicted = list (np.random.choice(self.all_labels.values, size=ranking_size))
+            predictions.append(y_predicted)
 
         return predictions
 
