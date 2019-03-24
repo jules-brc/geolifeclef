@@ -1,50 +1,9 @@
 
 import numpy as np
 import pandas as pd
+from classifier import Classifier
 
-class Classifier(object):
-
-    """Generic class for a classifier
-    """
-    def __init__(self, trainset):
-        """
-           :param trainset: the GLCDataset training set for the model
-        """
-        self.trainset = None
-
-    def fit(self, dataset):
-        """Trains the model on the dataset
-           :param dataset: the GLCDataset training set
-        """
-        raise NotImplementedError("fit not implemented")
-
-    def predict(self, dataset, rank_size=100):
-        """Predict the list of labels most likely to be observed
-           for the data points given
-        """
-        raise NotImplementedError("predict not implemented")
-
-    def mrr_score(self, dataset):
-        """Computes the mean reciprocal rank from a test set provided,
-           which means we find the inverse of the rank of the actual class along
-           the predicted labels for every row in the test set, and
-           calculate the mean.
-
-           :param dataset: the test set
-           :return: the mean reciprocal rank, from 0 to 1 (perfect prediction)
-        """
-        predictions = self.predict(dataset)
-        mrr = 0.
-        for i,prediction in enumerate(predictions):
-            try:
-                rank = prediction.index(dataset.get_label(i))
-                mrr += 1./rank
-            except ValueError: # the actual specie is not returned
-                mrr += 0.
-        return 1./len(dataset)* mrr
-
-    def cross_validation(self, dataset, n_folds):
-        pass
+import scipy.spatial.distance
 
 class VectorModel(Classifier):
 
@@ -65,61 +24,65 @@ class VectorModel(Classifier):
            K being the number of layers in the env. tensor
            :param dataset: the GLCDataset training set
         """
-
-        self.trainset = dataset
+        self.train_set = dataset
         self.train_vectors = dataset.tensors_to_vectors(self.window_size)
 
-    def predict(self, dataset, ranking_size=100):
+    def predict(self, dataset, ranking_size=30):
 
+        """For each point in the dataset, returns the labels of the 30 closest points in the training set.
+           It only keeps the closests training points of different species.
+        """
         predictions = []
-        vectors_test = dataset.tensors_to_vectors(self.window_size)
+        test_vectors = dataset.tensors_to_vectors(self.window_size)
 
         for j in range(len(dataset)):
 
-            vector_j = vectors_test[j]
-
+            vector_j = test_vectors[j]
             # euclidean distances from the test point j to all training points i
-            distances = np.array([np.sqrt(np.sum((vector_j-vector_i)**2))
-                                   for vector_i in self.train_vectors
-                                   ])
-
+            distances = np.array([scipy.spatial.distance.euclidean(vector_j,vector_i)
+                                  for vector_i in self.train_vectors
+                                 ])
+            #print(distances)
             # sorts by ascending distance and gives the predicted labels
             argsort = np.argsort(distances)
-
-            toplabels = np.empty(rank_size, dtype=np.int32)
+            y_predicted = []
             labels_found = set() #labels already returned
-
             for i in argsort:
-
-                label = self.trainset.get_label(i)
-                if not label in labels_found:
-                    toplabels[n_labels] = label
-                    n_labels += 1
-                    labels_found.add(label)
-
-                if n_labels >= ranking_size:
+                if len(y_predicted) >= ranking_size:
                     break
-
-            predictions.append(toplabels)
+                label = self.train_set.get_label(i)
+                if not label in labels_found:
+                    y_predicted.append(label)
+                    labels_found.add(label)
+            predictions.append(y_predicted)
         return predictions
 
 if __name__ == '__main__':
 
     from glcdataset import GLCDataset
 
-    print("Vector model tested on train set")
-    glc_dataset = GLCDataset('example_occurrences.csv', 'example_envtensors/0')
-    vectormodel = VectorModel()
+    print("Vector model tested on train set\n")
+    df = pd.read_csv('example_occurrences.csv', sep=';', header='infer', quotechar='"', low_memory=True)
+    df = df.dropna(axis=0, how='all')
+    df = df.astype({'glc19SpId': 'int64'})
+    glc_dataset = GLCDataset(df[['Longitude','Latitude']], df['glc19SpId'],
+                             scnames=df[['glc19SpId','scName']],patches_dir='example_envtensors/0')
+
+    vectormodel = VectorModel(window_size=65)
 
     vectormodel.fit(glc_dataset)
     predictions = vectormodel.predict(glc_dataset)
+    scnames = vectormodel.train_set.scnames
+    for idx in range(4):
 
-    scnames = vectormodel.trainset.scnames #scientific names of species
-    for i in [0,1,2]:
+        y_predicted = predictions[idx]
+        print("Occurrence:", vectormodel.train_set.data.iloc[idx].values)
+        print("Observed specie:", scnames.iloc[idx]['scName'])
+        print("Predicted species, ranked:")
 
-        predict = predictions[i]
+        print([scnames[scnames.glc19SpId == y]['scName'].iloc[0] for y in y_predicted[:10]])
+        print('\n')
 
-        print("Point in space:", vectormodel.trainset[i]['lat'],vectormodel.trainset[i]['lng'])
-        print("Observed specie:", scnames.loc[i,'scName'])
-        print("Predicted species (ranked):", [scnames[scnames.glc19SpId in predict]['scName']])
-    #print(vectormodel.vectors)
+    print("Top30 score:",vectormodel.top30_score(glc_dataset))
+    print("MRR score:", vectormodel.mrr_score(glc_dataset))
+    print("Cross validation score:", vectormodel.cross_validation(glc_dataset, 4, shuffle=False, evaluation_metric='mrr'))

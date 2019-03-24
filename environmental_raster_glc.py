@@ -14,7 +14,6 @@ import os
 import warnings
 import pandas as pd
 import matplotlib.pyplot as plt
-import numba
 
 MIN_ALLOWED_VALUE = -10000
 EPS = 1
@@ -25,6 +24,9 @@ EPS = 1
 # Some rasters are preferably used through a one hot encoding
 # representation thus increasing the depth of the environmental tensor:
 # the parameter 'one_hot' enables to cancel it to have a single patch
+
+## 'clc'.one_hot modified to False first to avoid any dimensional issues
+## at the beginning of the work
 
 raster_metadata = {
     'alti': {'nan': 0},

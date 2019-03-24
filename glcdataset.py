@@ -5,33 +5,30 @@ import torch
 from torch.utils.data import Dataset
 
 #Csv for correspondence between species ids and Taxref names
-TAXANAME_CSV = '/Users/Jules/dev/geolifeclef/data/occurrences/taxaName_glc19SpId.csv'
+TAXANAME_CSV = '../data/occurrences/taxaName_glc19SpId.csv'
 
 class GLCDataset(Dataset):
 
     """Represents a dataset from the data of GLC 2019
     """
-    def __init__(self, dataset, patches_dir):
+    def __init__(self, data, labels, scnames, patches_dir):
 
         """
         Creates a dataset object for the species occurrences, the associated
         environmental patches, and their labels.
-        The env. patches must already exist in the patches_dir directory
+        OFFLINE USE : The env. patches must already be saved in the patches_dir directory
 
-        :param dataset: the csv file of the occurrences data
+        :param dataframe: pandas dataframe read from a csv file containing occurrences data
         :param patches_dir: the directory containing the .npy files of the
             environmental patches for each occurence in the dataset
         """
-        # Reads the csv file containing the occurrences,
         # separates occurrences (Lat,Lng) and labels (glc19SpId)
-        df = pd.read_csv(dataset, sep=';', quotechar='"', low_memory=True)
-        df = df.dropna(axis=0, how='all')
-        self.data = df[['Longitude','Latitude']] #occurences (lat,lng)
-        self.labels = df['glc19SpId'] #labels (species id)
 
-        # correspondence between species ids and scientific names
-        self.scnames = df[['scName','glc19SpId']]
-
+        self.data = data #occurences (lat,lng)
+        self.labels = labels #labels (species id)
+        # correspondence between species ids and scientific names, if provided
+        if scnames is not None:
+            self.scnames = scnames
         self.patches_dir = patches_dir
 
     def __len__(self):
@@ -45,7 +42,7 @@ class GLCDataset(Dataset):
         """:param idx: the integer index
            :return: a dictionary containing lat, lng, and patch
         """
-        true_idx = self.data.index[idx] #The real index
+        true_idx = self.data.index[idx]
         # Reads the file with the name as the index plus extension .npy
         patch_name = os.path.join(self.patches_dir, str(true_idx)+'.npy')
         patch = np.load(patch_name)
@@ -67,43 +64,45 @@ class GLCDataset(Dataset):
         for i in range(self.__len__()):
 
             patch = self[i]['patch']
-            vectors.append(np.empty(len(patch), dtype=np.float64))
+            vectors.append(np.empty(patch.shape[0], dtype=np.float64))
 
             for k,layer in enumerate(self[i]['patch']):
                 x_c, y_c = layer.shape[0]//2, layer.shape[1]//2
-                vectors[i][k] = patch[x_c - window_size //2: x_c + window_size //2,
-                                      y_c - window_size //2, y_c + window_size //2].mean()
+                vectors[i][k] = layer[x_c - window_size//2: x_c + window_size//2,
+                                      y_c - window_size//2: y_c + window_size//2].mean()
         return vectors
 
-    def scname_correspondence(self, list_spids):
+    def get_taxref_names_correspondence(self, list_spids):
         """Returns the taxonomic names which corresponds to the list of
            species ids
            :param list_spids: the list of species ids
            :return: the list of taxonomic names
         """
         df = pd.read_csv(TAXANAME_CSV, sep=';', quotechar='"')
-
         return [df[df.glc19SpId == spid]['taxaName'].iloc[0] for spid in list_spids]
 
 if __name__ == '__main__':
 
     # Test
-    glc_dataset = GLCDataset('example_occurrences.csv', 'example_envtensors/0')
+    df = pd.read_csv('example_occurrences.csv', sep=';', header='infer', quotechar='"', low_memory=True)
+    df = df[['Longitude','Latitude','glc19SpId','scName']]
+    if not (len(df.dropna(axis=0, how='all')) == len(df)):
+        raise Exception("nan lines in dataframe, cannot build the dataset!")
+
+    df = df.astype({'glc19SpId': 'int64'})
+    glc_dataset = GLCDataset(df[['Longitude','Latitude']], df['glc19SpId'],
+                             scnames=df[['glc19SpId','scName']],patches_dir='example_envtensors/0')
 
     print(len(glc_dataset), 'occurrences in the dataset')
-    print(len(glc_dataset.labels.unique()), 'number of species')
-    print("Head:")
-    for i in range(len(glc_dataset)):
+    print(len(glc_dataset.labels.unique()), 'number of species\n')
 
-        sample = glc_dataset[i]
-        print(i, ": lat lng:", sample['lat'],sample['lng'], "patch_size:",sample['patch'].shape)
-        if i == 10:
-            break
+    # for i in range(len(glc_dataset)):
 
-    some_ids = list(glc_dataset.labels.iloc[:10])
-    scnames = glc_dataset.scname_correspondence(some_ids)
-    print("Some ids:", some_ids)
-    print("Taxref names:", scnames)
+    #     sample = glc_dataset[i]
+    #     print(i, ": lat %.2f, lng %.2f,"%(sample['lat'],sample['lng']),"patch_size:",sample['patch'].shape)
+    #     if i == 10:
+    #         break
+    print(pd.concat([glc_dataset.data, glc_dataset.scnames], axis=1).head(15))
+
     # The dataset can now be used in a DataLoader
     # data_loader = torch.utils.data.DataLoader(glc_dataset, shuffle=True, batch_size=2)
-

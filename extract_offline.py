@@ -24,7 +24,8 @@ if __name__ == '__main__':
 
     # Reads the csv file containing the occurences
 
-    df = pd.read_csv(args.dataset, sep=';', header='infer', quotechar='"', low_memory=False)
+    ##df = pd.read_csv(args.dataset, sep=';', header='infer', quotechar='"', low_memory=False)
+    df = pd.read_csv(args.dataset, sep=';', header='infer', quotechar='"', low_memory=True)
     df = df.dropna(axis=0, how='all')
 
     batch_size = 10000  # number of patch to extract simultaneously
@@ -37,8 +38,8 @@ if __name__ == '__main__':
 
     positions = []
 
-    # exception = ('proxi_eau_fast',)
-    exception = tuple()  # add rasters that don't fit into memory
+    exception = ('proxi_eau_fast',)
+    ##exception = tuple()  # add rasters that don't fit into memory
 
     # The counter to name the file:
     export_count = 0
