@@ -22,8 +22,6 @@ class GLCDataset(Dataset):
         :param patches_dir: the directory containing the .npy files of the
             environmental patches for each occurence in the dataset
         """
-        # separates occurrences (Lat,Lng) and labels (glc19SpId)
-
         self.data = data #occurences (lat,lng)
         self.labels = labels #labels (species id)
         # correspondence between species ids and scientific names, if provided

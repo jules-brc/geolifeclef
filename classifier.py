@@ -16,7 +16,7 @@ class Classifier(object):
         """
         raise NotImplementedError("fit not implemented!")
 
-    def predict(self, dataset, rank_size=30):
+    def predict(self, dataset, ranking_size=30):
         """Predict the list of labels most likely to be observed
            for the data points given
         """
