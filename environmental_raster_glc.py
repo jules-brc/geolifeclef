@@ -207,7 +207,6 @@ class Raster(object):
     def __getitem__(self, item, cancel_one_hot=False):
         """
         The method to use to retrieve a patch.
-
         :param item: GPS position (latitude, longitude)
         :param cancel_one_hot: if true the one hot encoding representation will be disabled
         :return: the extracted patch with eventually some transformations

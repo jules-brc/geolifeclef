@@ -27,6 +27,7 @@ class RandomModel(Classifier):
         return predictions
 
 if __name__ == '__main__':
+
     from glcdataset import GLCDataset
 
     print("Random model tested on train set\n")
