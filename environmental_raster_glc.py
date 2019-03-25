@@ -64,7 +64,6 @@ raster_metadata = {
     'text': {'nan': -1},
 }
 
-
 class Raster(object):
     """
     Raster is dedicated to a single raster management...

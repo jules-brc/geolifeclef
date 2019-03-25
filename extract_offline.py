@@ -37,8 +37,7 @@ if __name__ == '__main__':
     ext = PatchExtractor(args.rasters, size=args.size, verbose=True)
 
     positions = []
-
-    exception = ('proxi_eau_fast',)
+    exception = ('proxi_eau_fast','alti')
     ##exception = tuple()  # add rasters that don't fit into memory
 
     # The counter to name the file:

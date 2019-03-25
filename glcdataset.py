@@ -12,15 +12,13 @@ class GLCDataset(Dataset):
     """Represents a dataset from the data of GLC 2019
     """
     def __init__(self, data, labels, scnames, patches_dir):
-
         """
         Creates a dataset object for the species occurrences, the associated
         environmental patches, and their labels.
         OFFLINE USE : The env. patches must already be saved in the patches_dir directory
 
         :param dataframe: pandas dataframe read from a csv file containing occurrences data
-        :param patches_dir: the directory containing the .npy files of the
-            environmental patches for each occurence in the dataset
+        :param patches_dir: the root directory containing the saved env. tensors
         """
         self.data = data #occurences (lat,lng)
         self.labels = labels #labels (species id)
@@ -34,15 +32,20 @@ class GLCDataset(Dataset):
 
     # Leaves the reading of env. patches to __getitem__. This is memory
     # efficient because all the patches are not stored in memory at once but
-    # read as required. (WORK IN PROGRESS)
+    # read as required.
     def __getitem__(self, idx):
 
         """:param idx: the integer index
            :return: a dictionary containing lat, lng, and patch
         """
+        # get original index, before possible dropped rows
         true_idx = self.data.index[idx]
-        # Reads the file with the name as the index plus extension .npy
-        patch_name = os.path.join(self.patches_dir, str(true_idx)+'.npy')
+        # find the name of the file
+        patch_name = os.path.join(self.patches_dir,
+                                  str(true_idx // 10000), # quotient the batch size used at extract-export step
+                                  str(true_idx % 1024)+'.npy' #modulo the number of patch per folder used at the extraction-export step
+                                  )
+        # reads the file
         patch = np.load(patch_name)
         lat,lng = self.data.loc[true_idx,'Longitude'],self.data.loc[true_idx,'Latitude']
 
@@ -84,22 +87,20 @@ if __name__ == '__main__':
     # Test
     df = pd.read_csv('example_occurrences.csv', sep=';', header='infer', quotechar='"', low_memory=True)
     df = df[['Longitude','Latitude','glc19SpId','scName']]
-    if not (len(df.dropna(axis=0, how='all')) == len(df)):
-        raise Exception("nan lines in dataframe, cannot build the dataset!")
 
+    df = df.dropna(axis=0, how='all') #drop nan lines
     df = df.astype({'glc19SpId': 'int64'})
     glc_dataset = GLCDataset(df[['Longitude','Latitude']], df['glc19SpId'],
-                             scnames=df[['glc19SpId','scName']],patches_dir='example_envtensors/0')
+                             scnames=df[['glc19SpId','scName']],patches_dir='example_envtensors')
 
     print(len(glc_dataset), 'occurrences in the dataset')
     print(len(glc_dataset.labels.unique()), 'number of species\n')
 
-    # for i in range(len(glc_dataset)):
-
-    #     sample = glc_dataset[i]
-    #     print(i, ": lat %.2f, lng %.2f,"%(sample['lat'],sample['lng']),"patch_size:",sample['patch'].shape)
-    #     if i == 10:
-    #         break
+    for i in range(len(glc_dataset)):
+        sample = glc_dataset[i]
+        print(i, ": lat %.2f, lng %.2f,"%(sample['lat'],sample['lng']),"patch_size:",sample['patch'].shape)
+        if i == 10:
+            break
     print(pd.concat([glc_dataset.data, glc_dataset.scnames], axis=1).head(15))
 
     # The dataset can now be used in a DataLoader

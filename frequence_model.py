@@ -16,7 +16,7 @@ class FrequenceModel(Classifier):
         self.all_labels_by_frequency = None
 
     def fit(self, dataset):
-        # NEEDS DEBUGGING maybe
+
         self.train_set = dataset
         all_labels, counts = np.unique(dataset.labels.values, return_counts=True)
         print(np.argsort(counts))
