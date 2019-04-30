@@ -2,62 +2,94 @@ import numpy as np
 import pandas as pd
 from classifier import Classifier
 
+# Scikit-learn validation tools
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+
 class FrequenceModel(Classifier):
 
-    """Simple vector model based on nearest-neighbors in the environmental
-       space
+    """Frequence model returning always the most frequent labels in the
+       training set.
+       This is a baseline to compare with more elaborate models. If a model
+       performs less that this one, we can conclude that it did not learn
+       anything from the data.
     """
-    def __init__(self, window_size=4):
+    def __init__(self, ranking_size=30):
         """
-           :param window_size: the size of the pixel window to calculate the
-            mean value for each layer of a tensor
         """
-         # species ranked from most to least common in the training set
-        self.all_labels_by_frequency = None
+        self.ranking_size = ranking_size
 
-    def fit(self, dataset):
+    def fit(self, X, y):
 
-        self.train_set = dataset
-        all_labels, counts = np.unique(dataset.labels.values, return_counts=True)
-        print(np.argsort(counts))
-        self.all_labels_by_frequency = pd.Series(all_labels[np.argsort(counts)])
+        # check that X and y have correct shape
+        X, y = check_X_y(X, y)
+        self.X_ = X
+        self.y_ = y
+        y_unique, counts = np.unique(y, return_counts=True)
 
-    def predict(self, dataset, ranking_size=30):
+        # probabilities of the labels
+        probas = counts/len(y)
+        # get the indexes of the sorted probabilities, in decreasing order
+        top_predictions = np.flip(np.argsort(probas)[-self.ranking_size:],axis=0)
+        # get most frequent labels
+        self.y_predicted_ = y_unique[top_predictions]
+        # get as well the probabilities of the predictions
+        self.y_predicted_probas_ = probas[top_predictions]
 
-        predictions = []
-        for j in range(len(dataset)):
+        return self
 
-            y_predicted = list (self.all_labels_by_frequency[:ranking_size] )
-            predictions.append(y_predicted)
+    def predict(self, X, return_proba=False):
 
-        return predictions
+        # check is fit had been called
+        check_is_fitted(self, ['X_', 'y_'])
+        # input validation
+        X = check_array(X)
+        y_predicted = np.tile(self.y_predicted_, (len(X),1))
+        if return_proba:
+            y_predicted_probas = np.tile(self.y_predicted_probas_, (len(X),1))
+            return y_predicted, y_predicted_probas
+
+        return y_predicted
 
 if __name__ == '__main__':
 
-    from glcdataset import GLCDataset
+    from sklearn.model_selection import train_test_split
+    from glcdataset import build_environmental_data
+    from sklearn.preprocessing import StandardScaler
 
-    print("Vector model tested on train set\n")
-    df = pd.read_csv('example_occurrences.csv', sep=';', header='infer', quotechar='"', low_memory=True)
-    df = df.dropna(axis=0, how='all')
-    df = df.astype({'glc19SpId': 'int64'})
-    glc_dataset = GLCDataset(df[['Longitude','Latitude']], df['glc19SpId'],
-                             scnames=df[['glc19SpId','scName']],patches_dir='example_envtensors/0')
+    # for reproducibility
+    np.random.seed(42)
 
-    frequencemodel = FrequenceModel()
+    # working on a subset of Pl@ntNet Trusted: 2500 occurrences
+    df = pd.read_csv('example_occurrences.csv',
+                 sep=';', header='infer', quotechar='"', low_memory=True)
 
-    frequencemodel.fit(glc_dataset)
-    predictions = frequencemodel.predict(glc_dataset)
-    scnames = frequencemodel.train_set.scnames
-    for idx in range(4):
+    df = df[['Longitude','Latitude','glc19SpId','scName']]\
+           .dropna(axis=0, how='all')\
+           .astype({'glc19SpId': 'int64'})
 
-        y_predicted = predictions[idx]
-        print("Occurrence:", frequencemodel.train_set.data.iloc[idx].values)
-        print("Observed specie:", scnames.iloc[idx]['scName'])
-        print("Predicted species, ranked:")
+    # target pandas series of the species identifiers (there are 505 labels)
+    target_df = df['glc19SpId']
 
-        print([scnames[scnames.glc19SpId == y]['scName'].iloc[0] for y in y_predicted[:10]])
-        print('\n')
+    # building the environmental data
+    env_df = build_environmental_data(df[['Latitude','Longitude']],patches_dir='example_envtensors')
+    X = env_df.values
+    y = target_df.values
+    # Standardize the features by removing the mean and scaling to unit variance
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
 
-    print("Top30 score:",frequencemodel.top30_score(glc_dataset))
-    print("MRR score:", frequencemodel.mrr_score(glc_dataset))
-    print("Cross validation score:", frequencemodel.cross_validation(glc_dataset, 4, shuffle=False, evaluation_metric='mrr'))
+    # Evaluate as the average accuracy on one train/split random sample:
+    print("Test frequence model")
+    X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.2)
+    classifier = FrequenceModel()
+    classifier.fit(X_train,y_train)
+    y_predicted = classifier.predict(X_test)
+    print(f'Top30 score:{classifier.top30_score(y_predicted, y_test)}')
+    print(f'MRR score:{classifier.mrr_score(y_predicted, y_test)}')
+    print('Params:',classifier.get_params())
+
+    print("Example of predict proba:")
+    print(f"occurrence:\n{X_test[12]}")
+    y_pred, y_probas = classifier.predict(X_test[12].reshape(1,-1), return_proba=True)
+    print(f'predicted labels:\n{y_pred}')
+    print(f'predicted probas:\n{y_probas}')
