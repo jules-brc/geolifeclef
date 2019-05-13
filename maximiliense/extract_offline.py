@@ -32,14 +32,19 @@ if __name__ == '__main__':
                         help='The directory where the patches will be exported')
 
     parser.add_argument('--size', dest='size', type=int, help='size of the final patch (default : 64)', default=64)
-    parser.add_argument('--normalized', dest='norm', type=bool, help='true if patch normalized (False by default)',
+    parser.add_argument('--xd', dest='norm', type=bool, help='true if patch xd (False by default)',
                         default=False)
 
     args = parser.parse_args()
 
+    print('\nSize of extractions:',args.size)
+    print('Normalize:', args.norm,'\n')
+
     # Reads the csv file containing the occurences
     df = pd.read_csv(args.dataset, sep=';', header='infer', quotechar='"', low_memory=True)
     df = df.dropna(axis=0, how='all')
+    # keep only columns required for extraction, to free up memory
+    df = df[['Latitude','Longitude']]
 
     ## MODIFIED : Now all the files are saved in the same directory and their
     ## names are just the index of the row in the dataframe.

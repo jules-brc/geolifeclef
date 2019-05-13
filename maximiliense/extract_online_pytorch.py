@@ -5,6 +5,7 @@ from environmental_raster_glc import PatchExtractor
 
 
 class GeoLifeClefDataset(Dataset):
+
     def __init__(self, extractor, dataset, labels):
         self.extractor = extractor
         self.labels = labels

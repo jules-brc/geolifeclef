@@ -56,7 +56,7 @@ available:
 | pd_top      | Topsoil packing density | ordinal |{1,2}|
 | text      | Dominant surface textural class| ordinal |[0,5]|
 | proxi_eau_fast      | <50 meters to fresh water| boolean |{0,1}|
-| clc      | Ground occupation | categorial |[1,48]|
+| clc      | Ground occupation | categorical |[1,48]|
 
 More details about each raster are available within the archive.
 ### Dataset of Occurrences
