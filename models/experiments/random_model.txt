@@ -1,0 +1,19 @@
+---------------------------------------------------------------------
+
+Random search results on subsample:
+
+Best Top30 score: 0.04397364576004346
+
+Best parameters set found:
+{}
+
+Cross validation results:
+{'mean_fit_time': array([0.00302429]), 'std_fit_time': array([0.00069895]), 'mean_score_time': array([0.04017345]), 'std_score_time': array([0.0076399]), 'params': [{}], 'split0_test_score': array([0.03496503]), 'split1_test_score': array([0.05272727]), 'split2_test_score': array([0.0513308]), 'split3_test_score': array([0.03053435]), 'split4_test_score': array([0.04109589]), 'split5_test_score': array([0.05521472]), 'split6_test_score': array([0.06329114]), 'split7_test_score': array([0.02850877]), 'split8_test_score': array([0.04103672]), 'split9_test_score': array([0.03908046]), 'split10_test_score': array([0.05769231]), 'split11_test_score': array([0.0440367]), 'split12_test_score': array([0.0503876]), 'split13_test_score': array([0.03047619]), 'split14_test_score': array([0.04545455]), 'split15_test_score': array([0.03861789]), 'split16_test_score': array([0.06016598]), 'split17_test_score': array([0.04583333]), 'split18_test_score': array([0.03982301]), 'split19_test_score': array([0.0372093]), 'split20_test_score': array([0.05308219]), 'split21_test_score': array([0.04203152]), 'split22_test_score': array([0.04166667]), 'split23_test_score': array([0.06019417]), 'split24_test_score': array([0.03386454]), 'split25_test_score': array([0.03462322]), 'split26_test_score': array([0.03571429]), 'split27_test_score': array([0.04222222]), 'split28_test_score': array([0.04318182]), 'split29_test_score': array([0.04514673]), 'mean_test_score': array([0.04397365]), 'std_test_score': array([0.00923973]), 'rank_test_score': array([1], dtype=int32), 'split0_train_score': array([0.05126468]), 'split1_train_score': array([0.04988764]), 'split2_train_score': array([0.05163165]), 'split3_train_score': array([0.04937444]), 'split4_train_score': array([0.04767209]), 'split5_train_score': array([0.04810463]), 'split6_train_score': array([0.04286346]), 'split7_train_score': array([0.0506162]), 'split8_train_score': array([0.04826978]), 'split9_train_score': array([0.0475356]), 'split10_train_score': array([0.04516712]), 'split11_train_score': array([0.04960718]), 'split12_train_score': array([0.05307761]), 'split13_train_score': array([0.04938547]), 'split14_train_score': array([0.04850912]), 'split15_train_score': array([0.04680568]), 'split16_train_score': array([0.04515272]), 'split17_train_score': array([0.04513274]), 'split18_train_score': array([0.05299033]), 'split19_train_score': array([0.04704595]), 'split20_train_score': array([0.05072464]), 'split21_train_score': array([0.04922104]), 'split22_train_score': array([0.04852415]), 'split23_train_score': array([0.04570792]), 'split24_train_score': array([0.04846598]), 'split25_train_score': array([0.05034376]), 'split26_train_score': array([0.04862953]), 'split27_train_score': array([0.04461538]), 'split28_train_score': array([0.05175439]), 'split29_train_score': array([0.05069124]), 'mean_train_score': array([0.04862574]), 'std_train_score': array([0.00249445])}
+
+Evaluation on complete data:
+
+Top30 score: 0.02296620446037855
+MRR score: 0.0031823733513031333
+Accuracy: 0.0008857489323561976
+---------------------------------------------------------------------
+

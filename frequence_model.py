@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import sys
+sys.path.extend(['..','./base','./evaluation'])
 from classifier import Classifier
 
 # Scikit-learn validation tools
@@ -20,10 +22,8 @@ class FrequenceModel(Classifier):
 
     def fit(self, X, y):
 
-        # check that X and y have correct shape
-        X, y = check_X_y(X, y)
-        self.X_ = X
-        self.y_ = y
+        super().fit(X, y)
+
         y_unique, counts = np.unique(y, return_counts=True)
 
         # probabilities of the labels
@@ -93,3 +93,11 @@ if __name__ == '__main__':
     y_pred, y_probas = classifier.predict(X_test[12].reshape(1,-1), return_proba=True)
     print(f'predicted labels:\n{y_pred}')
     print(f'predicted probas:\n{y_probas}')
+
+    # Top30 score:0.297
+    # MRR score:0.06470175515004985
+    # Params: {'ranking_size': 30}
+
+    # Maybe the data contains a lot of common species?
+    # Maybe it follows Zipf law? Try to plot number of species considered/percent
+    # of species in the dataset

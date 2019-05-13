@@ -14,6 +14,13 @@ if __name__ == '__main__':
            .dropna(axis=0, how='all')\
            .astype({'glc19SpId': 'int64'})
 
+    # # remove rare species: observations for which the label is unique in the
+    # # dataset
+    ## FIX : IT DOES NOT DO ANYTHING!
+    # print(len(df))
+    # df = df.groupby('glc19SpId').filter(lambda x: len(x) > 1)
+    # print(len(df))
+
     # target pandas series of the species identifiers (there are 505 labels)
     target_df = df['glc19SpId']
 

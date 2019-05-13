@@ -1,11 +1,13 @@
-.idea/*
 .idea/
 *.log
-__pychache__/
-*.so
+**/__pycache__
 # environmental tensors saved as numpy format
 *.npy
 *.pyc
 # notebooks checkpoints
-*.ipynb_checkpoints
-*.DS_Store
+.ipynb_checkpoints/
+.DS_Store
+# datafiles and serialized models
+/data
+/models/experiments/*.pkl
+/maximiliense/patch.jpg
