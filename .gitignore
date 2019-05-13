@@ -8,6 +8,7 @@
 .ipynb_checkpoints/
 .DS_Store
 # datafiles and serialized models
-/data
-/models/experiments/*.pkl
-/maximiliense/patch.jpg
+data/
+!data/trunc
+models/experiments/*.pkl
+maximiliense/patch.jpg
